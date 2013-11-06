@@ -8,6 +8,7 @@ module ICGC
     @ftp ||= begin
              ftp = Net::FTP.new(SERVER)
              ftp.login
+             ftp.passive = true
              ftp
            end
   end
