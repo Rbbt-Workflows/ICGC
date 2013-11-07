@@ -7,6 +7,9 @@ ICGC=/$PWD filter="*.rb *.haml *.js *.sass *.css *.R *.ru" {
   icgc.rb
  }
  share=share{
+  rbbt_commands=rbbt_commands filter="*"{
+   bootstrap
+  }
   install=install{
    ICGC=ICGC{
     Rakefile
