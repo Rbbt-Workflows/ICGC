@@ -1,0 +1,20 @@
+
+require 'rbbt/workflow'
+Workflow.require_workflow 'ICGC'
+
+rule '.' do |t|
+  dataset = File.basename(File.expand_path('.'))
+  ddd dataset
+  ICGC.job(:prepare_study, dataset, :dataset => dataset, :output => '.').clean.run
+end
+
+
+ICGC.job(:datasets).run.each do |dataset, values|
+  rule /^(#{Regexp.quote dataset})\/metadata\.yaml$/ do |t|
+    dataset = t.name.split("/").first
+    ICGC.job(:prepare_study, dataset, :dataset => dataset, :output => dataset).clean.run
+  end
+
+  rule /^(#{Regexp.quote dataset})\/.*$/ => lambda{|f| File.join(f.split("/").first, "metadata.yaml")} do |t|
+  end
+end

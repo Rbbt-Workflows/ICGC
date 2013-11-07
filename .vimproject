@@ -6,4 +6,11 @@ ICGC=/$PWD filter="*.rb *.haml *.js *.sass *.css *.R *.ru" {
  lib=lib {
   icgc.rb
  }
+ share=share{
+  install=install{
+   ICGC=ICGC{
+    Rakefile
+   }
+  }
+ }
 }

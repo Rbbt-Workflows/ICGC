@@ -7,7 +7,6 @@ module ICGC
   extend Workflow
 
   SAMPLE_FIELDS = ["submitted_sample_id", "submitted_specimen_id"]#, "submitted_specimen_id", "submitted_donor_id"]
-  #SAMPLE_FIELDS = ["submitted_sample_id", "submitted_donor_id", "submitted_specimen_id"]
   EXPRESSION_FIELDS = ["normalized_expression_level", "normalized_read_count", "raw_read_count"]
 
   def self.find_field(headers, probe_field)
@@ -294,26 +293,11 @@ module ICGC
     nil
   end
   task :prepare_study => nil
+
+  extend Resource
+  self.subdir = "share/studies/ICGC/"
+  ddd ICGC.root
+  ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
 end
 
-if __FILE__ == $0 
-  Workflow.require_workflow "Genomics"
-  require 'rbbt/entity/study'
-  require 'rbbt/entity/study/genotypes'
-
-  study = "Acute_Myeloid_Leukemia-TCGA-US"
-
-  TmpFile.with_file do |dir|
-    FileUtils.mkdir_p dir
-    Study.study_dir = dir
-
-    ICGC.job(:prepare_study, study, :dataset => study, :output => File.join(dir, study)).clean.run
-
-
-    Study.setup(study)
-    puts study.dir.identifiers.tsv.summary
-    puts study.sample_info.summary
-
-    puts study.samples.select_by(:has_genotype?)
-  end
-end
+#ICGC.root["Acute_Myeloid_Leukemia-KR"].samples.produce
