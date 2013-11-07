@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+require 'rbbt/workflow'
+require 'rbbt/util/semaphore'
+require 'rbbt/entity/study'
+require 'rbbt/entity/study/genotypes'
+
+Workflow.require_workflow "ICGC"
+require 'rbbt/entity/gene'
+require 'rbbt/entity/genomic_mutation'
+
+datasets = ICGC.job(:datasets).run.keys
+
+num = ARGV.shift || "1"
+
+Study.study_dir = ICGC.root
+RbbtSemaphore.fork_each_on_semaphore(datasets, num.to_i) do |dataset|
+  study = Study.setup(dataset)
+  ddd study
+  ddd study.dir.genotypes.find
+  ddd study.dir.genotypes.glob("*")
+  study.knowledge_base.get_database(:sample_genes)
+end
