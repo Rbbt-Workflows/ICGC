@@ -296,7 +296,6 @@ module ICGC
 
   extend Resource
   self.subdir = "share/studies/ICGC/"
-  ddd ICGC.root
   ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
 end
 
