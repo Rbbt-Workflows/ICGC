@@ -16,7 +16,7 @@ num = ARGV.shift || "1"
 Study.study_dir = ICGC.root
 Log.debug("Bootstrapping over #{num.to_i} processes")
 RbbtSemaphore.fork_each_on_semaphore(datasets, num.to_i) do |dataset|
-    Log.debug("Bootstrapping dataset")
+    Log.debug("Bootstrapping #{ dataset }")
     study = Study.setup(dataset)
     study.knowledge_base.get_database(:sample_genes)
 end
