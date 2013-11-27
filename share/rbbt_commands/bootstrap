@@ -4,6 +4,7 @@ require 'rbbt/workflow'
 require 'rbbt/util/semaphore'
 require 'rbbt/entity/study'
 require 'rbbt/entity/study/genotypes'
+require 'rbbt/entity/study/expression'
 
 Workflow.require_workflow "ICGC"
 require 'rbbt/entity/gene'
@@ -20,4 +21,5 @@ RbbtSemaphore.fork_each_on_semaphore(datasets, num.to_i) do |dataset|
     study = Study.setup(dataset)
     study.knowledge_base.get_database(:sample_genes)
     study.job(:genotype_overview).run
+    study.has_expression?
 end
