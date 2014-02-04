@@ -298,5 +298,3 @@ module ICGC
   self.subdir = "share/studies/ICGC/"
   ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
 end
-
-#ICGC.root["Acute_Myeloid_Leukemia-KR"].samples.produce
