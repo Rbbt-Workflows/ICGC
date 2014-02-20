@@ -16,10 +16,11 @@ module ICGC
   def self.datasets
     ftp = self.ftp
     ftp.chdir('current')
-    ftp.nlst.select{|n| n[0] != "!"}
+    ftp.nlst.select{|n| n[0] != "!" and n != /Readme/i}
   end
 
   def self.dataset_files(dataset)
+    return {} if dataset =~ /Readme/i
     Persist.persist("Dataset files", :yaml, :dir => Rbbt.tmp.ICGC, :other => {:dataset => dataset}) do
       sleep rand * 10
       ftp = self.ftp

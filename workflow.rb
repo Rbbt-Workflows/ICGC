@@ -181,20 +181,20 @@ module ICGC
     end
     sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS #["Specimen ID", "Donor ID", "Analyzed sample ID", "Sample ID"]
 
-    mutation_field = 'tumour_genotype'
+    mutation_field = 'mutated_to_allele'
     tsv = TSV.open(ICGC.get_file(ICGC.dataset_files(dataset)['simple_somatic_mutation']), 
                    :header_hash => '', :merge => true,
                    :key_field => sample_field, 
-                   :fields => ["chromosome","chromosome_start", mutation_field]
+                   :fields => ["chromosome","chromosome_start", 'mutated_from_allele', 'mutated_to_allele']
                   )
 
     genotypes = TSV.setup({}, :key_field => "Sample", :fields => ["Genomic Mutation"], :type => :flat)
 
     tsv.through do |sample, values|
       genotypes[sample] = []
-      values.zip_fields.each do |chr, pos, mut|
+
+      values.zip_fields.each do |chr, pos, ref, mut|
         next if mut.nil?
-        ref, mut = mut.split(/>|\//)
         pos, muts = Misc.correct_icgc_mutation(pos.to_i, ref, mut)
         muts.each do |m|
           m.strip
