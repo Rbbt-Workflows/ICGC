@@ -23,6 +23,5 @@ RbbtSemaphore.fork_each_on_semaphore(datasets, num.to_i) do |dataset|
     study = Study.setup(dataset)
     study.knowledge_base.get_database(:sample_genes) if study.has_genotypes?
     study.knowledge_base.get_database(:sample_cnv_genes) if study.has_cnv?
-    #study.job(:genotype_overview).run
     study.has_expression?
 end
