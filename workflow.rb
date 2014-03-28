@@ -6,7 +6,7 @@ require 'rbbt/tsv/change_id'
 module ICGC
   extend Workflow
 
-  SAMPLE_FIELDS = ["submitted_sample_id", "submitted_specimen_id"]#, "submitted_specimen_id", "submitted_donor_id"]
+  SAMPLE_FIELDS = ["icgc_donor_id", "submitted_specimen_id"]#, "submitted_specimen_id", "submitted_donor_id"]
   EXPRESSION_FIELDS = ["normalized_expression_level", "normalized_read_count", "raw_read_count"]
 
   def self.find_field(headers, probe_field)
