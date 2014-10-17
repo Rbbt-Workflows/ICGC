@@ -6,8 +6,8 @@ require 'rbbt/tsv/change_id'
 module ICGC
   extend Workflow
 
-  SAMPLE_FIELDS = ["icgc_donor_id", "submitted_specimen_id"]#, "submitted_specimen_id", "submitted_donor_id"]
-  EXPRESSION_FIELDS = ["normalized_expression_level", "normalized_read_count", "raw_read_count"]
+  SAMPLE_FIELDS = ["icgc_donor_id", "submitted_specimen_id", "icgc_specimen_id"]#, "submitted_specimen_id", "submitted_donor_id"]
+  EXPRESSION_FIELDS = ["normalized_expression_level", "normalized_expression_value", "normalized_read_count", "raw_read_count"]
 
   def self.find_field(headers, probe_field)
     if Array === probe_field
@@ -25,7 +25,7 @@ module ICGC
         res = [Misc.field_position(headers, probe_field), probe_field]
         Log.debug("Found #{ probe_field }")
         res
-      rescue
+      rescue Exception
         raise "Field '#{probe_field}' not identified. Options: #{headers * ", "}"
       end
     end
@@ -163,6 +163,60 @@ module ICGC
 
 
   input :dataset, :string, "ICGC dataset code"
+  task :get_meth_array => :tsv do |dataset|
+    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['meth_array'])) do |stream|
+      TSV.parse_header(stream, :header_hash => '').fields
+    end
+    sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS.reverse
+    value_pos, value_field = ICGC.find_field fields, EXPRESSION_FIELDS
+
+    tsv = Association.index(ICGC.get_file(ICGC.dataset_files(dataset)['meth_array']), :header_hash => '', :source => sample_field, :target => "probe_id=~GPG Probe ID", :fields => [value_field], :persist => false, :monitor => true)
+
+    tsv.to_matrix value_field
+  end
+
+  input :dataset, :string, "ICGC dataset code"
+  task :get_meth_seq => :tsv do |dataset|
+    raise "Not implemented"
+    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['meth_seq'])) do |stream|
+      TSV.parse_header(stream, :header_hash => '').fields
+    end
+    sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS.reverse
+    value_pos, value_field = ICGC.find_field fields, EXPRESSION_FIELDS
+
+    tsv = Association.index(ICGC.get_file(ICGC.dataset_files(dataset)['meth_seq']), :header_hash => '', :source => sample_field, :target => "gene_id=~Ensembl Gene ID", :fields => [value_field], :persist => false, :monitor => true)
+
+    tsv.to_matrix value_field
+  end
+
+  input :dataset, :string, "ICGC dataset code"
+  task :get_exp_array => :tsv do |dataset|
+    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['exp_array'])) do |stream|
+      TSV.parse_header(stream, :header_hash => '').fields
+    end
+    sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS.reverse
+    value_pos, value_field = ICGC.find_field fields, EXPRESSION_FIELDS
+
+    tsv = Association.index(ICGC.get_file(ICGC.dataset_files(dataset)['exp_array']), :header_hash => '', :source => sample_field, :target => "gene_id=~Ensembl Gene ID", :fields => [value_field], :persist => false, :monitor => true)
+
+    tsv.to_matrix value_field
+  end
+
+  input :dataset, :string, "ICGC dataset code"
+  task :get_exp_seq => :tsv do |dataset|
+    raise "Not implemented"
+    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['exp_seq'])) do |stream|
+      TSV.parse_header(stream, :header_hash => '').fields
+    end
+    sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS.reverse
+    value_pos, value_field = ICGC.find_field fields, EXPRESSION_FIELDS
+
+    tsv = Association.index(ICGC.get_file(ICGC.dataset_files(dataset)['exp_seq']), :header_hash => '', :source => sample_field, :target => "gene_id=~Ensembl Gene ID", :fields => [value_field], :persist => false, :monitor => true)
+
+    tsv.to_matrix value_field
+  end
+
+  input :dataset, :string, "ICGC dataset code"
   task :get_clinical => :tsv do |dataset|
     fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['clinical'])) do |stream|
       TSV.parse_header(stream, :header_hash => '').fields
@@ -268,7 +322,7 @@ module ICGC
     if files.include? "clinical"
       sample_info = ICGC.job(:get_clinical, dataset, :dataset => dataset).run(true).path.tsv :type => :double
       sample_info.identifiers = File.join(output, 'identifiers')
-      sample_info = sample_info.change_key "submitted_sample_id"
+      sample_info = sample_info.change_key "icgc_donor_id"
       sample_info.key_field = "Sample ID"
       Open.write(File.join(output, 'samples'), sample_info.to_s)
     end
@@ -286,15 +340,20 @@ module ICGC
     end
  
     if files.include? "gene_expression"
-      FileUtils.mkdir_p File.join(output, 'matrices/gene_expression') unless File.exists? File.join(output, 'matrices/gene_expression')
-      FileUtils.cp(ICGC.job(:get_gene_expression, dataset, :dataset => dataset).run(true).path, File.join(output, 'matrices/gene_expression', 'data'))
+      begin
+        FileUtils.mkdir_p File.join(output, 'matrices/gene_expression') unless File.exists? File.join(output, 'matrices/gene_expression')
+        FileUtils.cp(ICGC.job(:get_gene_expression, dataset, :dataset => dataset).run(true).path, File.join(output, 'matrices/gene_expression', 'data'))
+      rescue Exception
+        Log.warn "Downloading gene expression from #{ dataset } failed"
+      end
     end
 
-    nil
+    "done"
   end
-  task :prepare_study => nil
+  task :prepare_study => :string
 
   extend Resource
   self.subdir = "share/studies/ICGC/"
   ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
 end
+
