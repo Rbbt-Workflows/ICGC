@@ -20,9 +20,18 @@ datasets = ICGC.job(:datasets).run.keys
 num = ARGV.shift || "1"
 
 Study.study_dir = ICGC.root
+
+Log.debug("Producing")
+datasets.each do |dataset|
+    study = Study.setup(dataset)
+    Log.debug("Producing #{ dataset }")
+    study.samples
+end
+
 Log.debug("Bootstrapping over #{num.to_i} processes")
 RbbtSemaphore.fork_each_on_semaphore(datasets, num.to_i) do |dataset|
-    Log.debug("Bootstrapping #{ dataset }")
+    study = Study.setup(dataset)
+    Log.debug("Bootstrapping #{ dataset } - #{study.samples.length}")
     study = Study.setup(dataset)
     study.knowledge_base.get_database(:sample_genes) if study.has_genotypes?
 end

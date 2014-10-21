@@ -6,7 +6,7 @@ require 'rbbt/tsv/change_id'
 module ICGC
   extend Workflow
 
-  SAMPLE_FIELDS = ["icgc_donor_id", "submitted_specimen_id", "icgc_specimen_id"]#, "submitted_specimen_id", "submitted_donor_id"]
+  SAMPLE_FIELDS = ["submitted_specimen_id", "submitted_sample_id", "icgc_specimen_id", "icgc_donor_id"]
   EXPRESSION_FIELDS = ["normalized_expression_level", "normalized_expression_value", "normalized_read_count", "raw_read_count"]
 
   def self.find_field(headers, probe_field)
@@ -233,7 +233,7 @@ module ICGC
     fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['simple_somatic_mutation'])) do |stream|
       TSV.parse_header(stream, :header_hash => '').fields
     end
-    sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS #["Specimen ID", "Donor ID", "Analyzed sample ID", "Sample ID"]
+    sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS 
 
     mutation_field = 'mutated_to_allele'
     tsv = TSV.open(ICGC.get_file(ICGC.dataset_files(dataset)['simple_somatic_mutation']), 
@@ -242,7 +242,7 @@ module ICGC
                    :fields => ["chromosome","chromosome_start", 'mutated_from_allele', 'mutated_to_allele']
                   )
 
-    genotypes = TSV.setup({}, :key_field => "Sample", :fields => ["Genomic Mutation"], :type => :flat)
+    genotypes = TSV.setup({}, :key_field => sample_field, :fields => ["Genomic Mutation"], :type => :flat)
 
     tsv.through do |sample, values|
       genotypes[sample] = []
@@ -276,7 +276,7 @@ module ICGC
                    :fields => ["Chromosome","Chromosome start", "Chromosome end", mutation_field]
                   )
 
-    cnvs = TSV.setup({}, :key_field => "Sample", :fields => ["CNV"], :type => :flat)
+    cnvs = TSV.setup({}, :key_field => sample_field, :fields => ["CNV"], :type => :flat)
 
     tsv.through do |sample, values|
       cnvs[sample] = []
@@ -322,8 +322,9 @@ module ICGC
     if files.include? "clinical"
       sample_info = ICGC.job(:get_clinical, dataset, :dataset => dataset).run(true).path.tsv :type => :double
       sample_info.identifiers = File.join(output, 'identifiers')
-      sample_info = sample_info.change_key "icgc_donor_id"
-      sample_info.key_field = "Sample ID"
+      main_key = (sample_info.all_fields & SAMPLE_FIELDS).first
+      sample_info = sample_info.change_key(main_key)
+
       Open.write(File.join(output, 'samples'), sample_info.to_s)
     end
 
@@ -355,5 +356,9 @@ module ICGC
   extend Resource
   self.subdir = "share/studies/ICGC/"
   ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
+end
+
+if defined? Sample
+  Sample.format = ICGC::SAMPLE_FIELDS
 end
 
