@@ -239,6 +239,7 @@ module ICGC
     tsv = TSV.open(ICGC.get_file(ICGC.dataset_files(dataset)['simple_somatic_mutation']), 
                    :header_hash => '', :merge => true,
                    :key_field => sample_field, 
+                   :unnamed => true,
                    :fields => ["chromosome","chromosome_start", 'mutated_from_allele', 'mutated_to_allele']
                   )
 
@@ -247,7 +248,7 @@ module ICGC
     tsv.through do |sample, values|
       genotypes[sample] = []
 
-      values.zip_fields.each do |chr, pos, ref, mut|
+      Misc.zip_fields(values).each do |chr, pos, ref, mut|
         next if mut.nil?
         pos, muts = Misc.correct_icgc_mutation(pos.to_i, ref, mut)
         muts.each do |m|
@@ -354,7 +355,9 @@ module ICGC
   task :prepare_study => :string
 
   extend Resource
-  self.subdir = "share/studies/ICGC/"
+
+  self.subdir = "share/data/projects/ICGC/"
+
   ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
 end
 

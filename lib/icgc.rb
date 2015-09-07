@@ -52,7 +52,7 @@ module ICGC
         assembly = tsv.values.first
         case assembly
         when "GRCh37"
-          "Hsa/jan2013"
+          "Hsa/dec2013"
         when "NCBI36"
           "Hsa/may2009"
         else
