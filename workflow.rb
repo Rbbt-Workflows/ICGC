@@ -141,7 +141,7 @@ module ICGC
 
     ICGC.datasets.each do |dataset|
       dataset_info = ICGC.dataset_files(dataset)
-      tsv[dataset] = %w(clinical simple_somatic_mutation cnv gene_expression methylation).collect{|type|
+      tsv[dataset] = %w(clinical simple_somatic_mutation copy_number_somatic_mutation exp_array meth_array).collect{|type|
         dataset_info.include? type
       }
     end
@@ -218,7 +218,7 @@ module ICGC
 
   input :dataset, :string, "ICGC dataset code"
   task :get_clinical => :tsv do |dataset|
-    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['clinical'])) do |stream|
+    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['donor'])) do |stream|
       TSV.parse_header(stream, :header_hash => '').fields
     end
     sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS
@@ -230,13 +230,15 @@ module ICGC
 
   input :dataset, :string, "ICGC dataset code"
   task :get_simple_somatic_mutation => :tsv do |dataset|
-    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['simple_somatic_mutation'])) do |stream|
-      TSV.parse_header(stream, :header_hash => '').fields
-    end
-    sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS 
+
+    type = 'simple_somatic_mutation.open'
+    fields = TSV.parse_header(Open.open(ICGC.dataset_url(dataset, type)), :header_hash => '').fields
+
+    sample_pos, sample_field = ICGC.find_field(fields, SAMPLE_FIELDS )
 
     mutation_field = 'mutated_to_allele'
-    tsv = TSV.open(ICGC.get_file(ICGC.dataset_files(dataset)['simple_somatic_mutation']), 
+    url = ICGC.dataset_url(dataset, type)
+    tsv = TSV.open(url, 
                    :header_hash => '', :merge => true,
                    :key_field => sample_field, 
                    :unnamed => true,

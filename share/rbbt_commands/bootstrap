@@ -1,31 +1,59 @@
 #!/usr/bin/env ruby
 
-require 'rbbt/util/semaphore'
+require 'rbbt-util'
+require 'rbbt/util/simpleopt'
 require 'rbbt/workflow'
-
 Workflow.require_workflow "Study"
+
+$0 = "rbbt #{$previous_commands*""} #{ File.basename(__FILE__) }" if $previous_commands
+
+default_dir = ICGC.root
+options = SOPT.setup <<EOF
+
+Description
+
+$ #{$0} [options] [<target_directory>]
+
+Default target directory is #{default_dir}
+
+-h--help Print this help
+EOF
+if options[:help]
+  if defined? rbbt_usage
+    rbbt_usage 
+  else
+    puts SOPT.usage
+  end
+  exit 0
+end
+
+target_directory = ARGV.shift || default_dir
+
+Study.study_dir = Path.setup(target_directory)
+
+require 'rbbt/util/semaphore'
+
 require 'rbbt/entity/study'
 require 'rbbt/entity/study/genotypes'
 require 'rbbt/entity/study/cnv'
-#require 'rbbt/entity/study/expression'
-#require 'rbbt/entity/study/cnv/knowledge_base'
 
 Workflow.require_workflow "ICGC"
 require 'rbbt/entity/gene'
 require 'rbbt/entity/genomic_mutation'
 
 
-datasets = ICGC.job(:datasets).run.keys
+datasets = ICGC.job(:datasets).clean.run.keys
 
 num = ARGV.shift || "1"
 
-Study.study_dir = ICGC.root
 
 Log.debug("Producing")
 datasets.each do |dataset|
-    study = Study.setup(dataset)
-    Log.debug("Producing #{ dataset }")
-    study.samples
+  ICGC[dataset]["metadata.yaml"].produce
+
+  study = Study.setup(dataset)
+  Log.debug("Producing #{ dataset }")
+  study.samples
 end
 
 Log.debug("Bootstrapping over #{num.to_i} processes")
@@ -35,3 +63,5 @@ RbbtSemaphore.fork_each_on_semaphore(datasets, num.to_i) do |dataset|
     study = Study.setup(dataset)
     study.knowledge_base.get_database(:sample_genes) if study.has_genotypes?
 end
+
+

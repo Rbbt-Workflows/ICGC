@@ -3,6 +3,11 @@ ICGC=/$PWD filter="*.rb *.haml *.js *.sass *.css *.R *.ru" {
  bin=bin {
  }
  lib=lib {
+  rbbt=rbbt{
+   sources=sources{
+    ICGC.rb
+   }
+  }
   icgc.rb
  }
  share=share{
