@@ -1,4 +1,5 @@
 require 'rbbt'
+require 'rbbt/sources/ICGC/format'
 
 module ICGC
   WSERVER = 'dcc.icgc.org'
@@ -18,14 +19,18 @@ module ICGC
     download_url dataset_file(dataset, type)
   end
 
-  def self.datasets
-    Open.open(download_url('/current/Projects/README.txt')) do |f|
-      f.read.split("\n").collect do |line|
-        next unless line =~ /^-\s*([A-Z]+-[A-Z]+)\s.*-.*/
-          $1
-      end
-    end.compact
+  def self.path_info(path)
+    JSON.parse(Open.read(File.join('https://dcc.icgc.org/api/v1/download/info/', path)))
   end
 
+  def self.datasets(base_dir="/current/Projects")
+    path_info(base_dir).collect do |info|
+      File.basename(info["name"])
+    end
+  end
+
+  def self.dataset_files(dataset)
+    path_info(File.join('/current/Projects/', dataset)).collect{|info| File.basename(info["name"]).split("\.#{dataset}\.").first }
+  end
 end
 

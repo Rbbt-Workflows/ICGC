@@ -1,35 +1,11 @@
-require 'icgc'
 require 'rbbt/workflow'
 require 'rbbt/sources/organism'
 require 'rbbt/tsv/change_id'
 
+require 'rbbt/sources/ICGC'
+
 module ICGC
   extend Workflow
-
-  SAMPLE_FIELDS = ["submitted_specimen_id", "submitted_sample_id", "icgc_specimen_id", "icgc_donor_id"]
-  EXPRESSION_FIELDS = ["normalized_expression_level", "normalized_expression_value", "normalized_read_count", "raw_read_count"]
-
-  def self.find_field(headers, probe_field)
-    if Array === probe_field
-      Log.debug("Trying fields: #{ probe_field.inspect }")
-      probe_field.each do |pf|
-        begin
-          return find_field(headers, pf)
-        rescue
-          next
-        end
-      end
-      raise "Fields #{probe_field.inspect} not identified. Options: #{headers * ", "}"
-    else
-      begin
-        res = [Misc.field_position(headers, probe_field), probe_field]
-        Log.debug("Found #{ probe_field }")
-        res
-      rescue Exception
-        raise "Field '#{probe_field}' not identified. Options: #{headers * ", "}"
-      end
-    end
-  end
 
   def self.process_ICGC_matrix(fsource, probe_field, sample_field, value_field, output)
     headers = fsource.gets.split("\t")
@@ -139,12 +115,13 @@ module ICGC
                     :type => :list
                    )
 
-    ICGC.datasets.each do |dataset|
+    TSV.traverse ICGC.datasets, :bar => true, :type => :array do |dataset|
       dataset_info = ICGC.dataset_files(dataset)
-      tsv[dataset] = %w(clinical simple_somatic_mutation copy_number_somatic_mutation exp_array meth_array).collect{|type|
+      tsv[dataset] = %w(simple_somatic_mutation copy_number_somatic_mutation exp_array meth_array).collect{|type|
         dataset_info.include? type
       }
     end
+
     tsv
   end
 
@@ -164,13 +141,18 @@ module ICGC
 
   input :dataset, :string, "ICGC dataset code"
   task :get_meth_array => :tsv do |dataset|
-    fields = Open.open(ICGC.get_file(ICGC.dataset_files(dataset)['meth_array'])) do |stream|
-      TSV.parse_header(stream, :header_hash => '').fields
-    end
+    file = "meth_array"
+    dataset_files = ICGC.dataset_files(dataset)
+    raise "No #{ file }" unless dataset_files.include? file
+
+    url = ICGC.dataset_url(dataset, file)
+
+    fields = TSV.parse_header(url, :header_hash => "").fields
+
     sample_pos, sample_field = ICGC.find_field fields, SAMPLE_FIELDS.reverse
     value_pos, value_field = ICGC.find_field fields, EXPRESSION_FIELDS
 
-    tsv = Association.index(ICGC.get_file(ICGC.dataset_files(dataset)['meth_array']), :header_hash => '', :source => sample_field, :target => "probe_id=~GPG Probe ID", :fields => [value_field], :persist => false, :monitor => true)
+    tsv = Association.index(url, :header_hash => '', :source => sample_field, :target => "probe_id=~GPG Probe ID", :fields => [value_field], :persist => false, :monitor => true)
 
     tsv.to_matrix value_field
   end
@@ -362,6 +344,8 @@ module ICGC
 
   ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
 end
+
+require 'icgc/tasks/datasets'
 
 if defined? Sample
   Sample.format = ICGC::SAMPLE_FIELDS
