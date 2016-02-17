@@ -2,6 +2,12 @@ require 'rbbt'
 require 'rbbt/sources/ICGC/format'
 
 module ICGC
+  extend Resource
+
+  self.subdir = "share/data/projects/ICGC/"
+
+  ICGC.claim ICGC.root, :rake, Rbbt.share.install.ICGC.Rakefile.find
+
   WSERVER = 'dcc.icgc.org'
 
   def self.download_url(file)
