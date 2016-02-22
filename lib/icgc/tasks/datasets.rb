@@ -114,18 +114,18 @@ module ICGC
     end
 
     if files.include? "exp_array"
-      FileUtils.mkdir_p File.join(output, 'matrices') unless File.exists? File.join(output, 'matrices')
-      FileUtils.cp(ICGC.job(:get_file, dataset, :file => 'exp_array').produce.path, File.join(output, 'matrices', 'exp_array'))
+      FileUtils.mkdir_p File.join(output, 'matrices','exp_array') unless File.exists? File.join(output, 'matrices','exp_array')
+      FileUtils.cp(ICGC.job(:get_file, dataset, :file => 'exp_array').produce.path, File.join(output, 'matrices', 'exp_array','data'))
     end
 
     if files.include? "exp_seq"
-      FileUtils.mkdir_p File.join(output, 'matrices') unless File.exists? File.join(output, 'matrices')
-      FileUtils.cp(ICGC.job(:get_file, dataset, :file => 'exp_seq').produce.path, File.join(output, 'matrices', 'exp_seq'))
+      FileUtils.mkdir_p File.join(output, 'matrices','exp_seq') unless File.exists? File.join(output, 'matrices','exp_seq')
+      FileUtils.cp(ICGC.job(:get_file, dataset, :file => 'exp_seq').produce.path, File.join(output, 'matrices', 'exp_seq','data'))
     end
 
     if files.include? "protein_expression"
-      FileUtils.mkdir_p File.join(output, 'matrices') unless File.exists? File.join(output, 'matrices')
-      FileUtils.cp(ICGC.job(:get_file, dataset, :file => 'protein_expression').produce.path, File.join(output, 'matrices', 'protein_expression'))
+      FileUtils.mkdir_p File.join(output, 'matrices','protein_expression') unless File.exists? File.join(output, 'matrices','protein_expression')
+      FileUtils.cp(ICGC.job(:get_file, dataset, :file => 'protein_expression').produce.path, File.join(output, 'matrices', 'protein_expression','data'))
     end
  
  
