@@ -127,42 +127,6 @@ module ICGC
       FileUtils.mkdir_p File.join(output, 'matrices','protein_expression') unless File.exists? File.join(output, 'matrices','protein_expression')
       FileUtils.cp(ICGC.job(:get_file, dataset, :file => 'protein_expression').produce.path, File.join(output, 'matrices', 'protein_expression','data'))
     end
- 
- 
-
-  #  if files.include? "clinicalsample"
-  #    FileUtils.cp(ICGC.job(:get_clinicalsample, dataset, :dataset => dataset).run(true).path, File.join(output, 'identifiers'))
-  #  end
- 
-  #  if files.include? "clinical"
-  #    sample_info = ICGC.job(:get_clinical, dataset, :dataset => dataset).run(true).path.tsv :type => :double
-  #    sample_info.identifiers = File.join(output, 'identifiers')
-  #    main_key = (sample_info.all_fields & SAMPLE_FIELDS).first
-  #    sample_info = sample_info.change_key(main_key)
-
-  #    Open.write(File.join(output, 'samples'), sample_info.to_s)
-  #  end
-
-  #  if files.include? "simple_somatic_mutation"
-  #    ICGC.job(:get_simple_somatic_mutation, dataset, :dataset => dataset).run.each do |sample, genotype|
-  #      Open.write(File.join(output, 'genotypes', sample), genotype * "\n")
-  #    end
-  #  end
- 
-  #  if files.include? "cnv"
-  #    ICGC.job(:get_cnv, dataset, :dataset => dataset).run.each do |sample, genotype|
-  #      Open.write(File.join(output, 'cnv', sample), genotype * "\n")
-  #    end
-  #  end
- 
-  #  if files.include? "gene_expression"
-  #    begin
-  #      FileUtils.mkdir_p File.join(output, 'matrices/gene_expression') unless File.exists? File.join(output, 'matrices/gene_expression')
-  #      FileUtils.cp(ICGC.job(:get_gene_expression, dataset, :dataset => dataset).run(true).path, File.join(output, 'matrices/gene_expression', 'data'))
-  #    rescue Exception
-  #      Log.warn "Downloading gene expression from #{ dataset } failed"
-  #    end
-  #  end
 
     "done"
   end
