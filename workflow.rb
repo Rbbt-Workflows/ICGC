@@ -3,6 +3,7 @@ require 'rbbt/sources/organism'
 require 'rbbt/tsv/change_id'
 
 require 'rbbt/sources/ICGC'
+require 'rbbt/sources/ICGC/format'
 
 module ICGC
   extend Workflow
@@ -342,6 +343,6 @@ end
 require 'icgc/tasks/datasets'
 
 if defined? Sample
-  Sample.format = ICGC::SAMPLE_FIELDS
+  Sample.format = ICGC::Format::SAMPLE_FIELDS
 end
 
