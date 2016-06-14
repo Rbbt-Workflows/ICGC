@@ -7,7 +7,7 @@ Workflow.require_workflow "Study"
 
 $0 = "rbbt #{$previous_commands*""} #{ File.basename(__FILE__) }" if $previous_commands
 
-default_dir = ICGC.root
+default_dir = ICGC.root.find
 options = SOPT.setup <<EOF
 
 Bootstrap ICGC studies
