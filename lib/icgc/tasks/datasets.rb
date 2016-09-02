@@ -74,7 +74,7 @@ module ICGC
     when 'meth_array'
       ICGC::Format.methylation_array(url)
     else
-      io = Open.open(url)
+      io = Open.open(url, {:wget_options => {"--no-check-certificate" => true}})
       Misc.open_pipe do |pin|
         pin.write("#")
         Misc.consume_stream io, false, pin
