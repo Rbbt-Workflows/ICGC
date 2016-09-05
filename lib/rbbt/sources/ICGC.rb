@@ -31,8 +31,9 @@ module ICGC
 
   def self.datasets(base_dir="/current/Projects")
     path_info(base_dir).collect do |info|
+      next if info["name"].include? "README"
       File.basename(info["name"])
-    end
+    end.compact
   end
 
   def self.dataset_files(dataset)
