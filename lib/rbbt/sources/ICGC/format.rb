@@ -140,7 +140,10 @@ module ICGC
 
       stream = dumper.stream
       stream.add_callback do
-        FileUtils.rm index_file
+        begin
+          FileUtils.rm index_file if File.exists? index_file 
+        rescue
+        end
       end
 
       stream
