@@ -58,7 +58,7 @@ end
 
 if options[:analyze]
   Log.debug("Bootstrapping over #{num.to_i} processes")
-  exec "rbbt workflow cmd Study bootstrap #{ target_directory } --cpus #{ num } --log #{Log.severiry}"
+  exec "rbbt workflow cmd Study bootstrap #{ target_directory } --cpus #{ num } --log #{Log.severity}"
 end
 
 
