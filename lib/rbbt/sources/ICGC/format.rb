@@ -33,7 +33,12 @@ module ICGC
 
     def self.ICGC_tsv(url, fields, options = {}, &block)
       options = Misc.add_defaults options, :namespace => ICGC::Format.organism, :type => :list, :merge => true
-      all_fields = TSV.parse_header(Open.open(url, {:wget_options => {"--no-check-certificate"=>true}}), :header_hash => '').fields
+
+      all_fields = Open.open(url, {:wget_options => {"--no-check-certificate"=>true}}) do |io|
+        io.no_fail = true
+        TSV.parse_header(io, :header_hash => '').fields
+      end
+
       target_fields = options[:fields] || fields
 
       sample_pos, sample_field = ICGC::Format.find_field(all_fields, SAMPLE_FIELDS)

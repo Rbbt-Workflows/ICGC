@@ -78,6 +78,7 @@ module ICGC
       Misc.open_pipe do |pin|
         pin.write("#")
         Misc.consume_stream io, false, pin
+        io.join if io.respond_to? :join
       end
     end
   end

@@ -18,7 +18,8 @@ Default target directory is #{default_dir}
 
 -h--help Print this help
 -a--analyze Analyze the studies instead of just downloading them
--c--cpus Number of process to use
+--concurrency* Number of processes to use
+-s--skip_download Skip downloading the study data
 EOF
 if options[:help]
   if defined? rbbt_usage
@@ -47,17 +48,18 @@ require 'rbbt/entity/genomic_mutation'
 datasets = ICGC.job(:datasets).clean.run
 
 num = ARGV.shift || "1"
-num = options[:cpus] if options[:cpus]
+num = options[:concurrency] if options[:concurrency]
 
-
-Log.debug("Producing")
-Misc.bootstrap(datasets) do |dataset|
+if ! options[:skip_download]
+ Log.debug("Downloading")
+ Misc.bootstrap(datasets, num) do |dataset|
   dir = File.join(target_directory, dataset)
   ICGC.job(:prepare_study, dataset, :dataset => dataset, :output => dir).run
+ end
 end
 
 if options[:analyze]
-  Log.debug("Bootstrapping over #{num.to_i} processes")
+  Log.debug("Bootstrapping over #{num.to_i} processes. Target directory: #{target_directory}")
   exec "rbbt workflow cmd Study bootstrap #{ target_directory } --cpus #{ num } --log #{Log.severity}"
 end
 
